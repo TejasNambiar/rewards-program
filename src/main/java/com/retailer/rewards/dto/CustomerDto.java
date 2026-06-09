@@ -2,9 +2,7 @@ package com.retailer.rewards.dto;
 
 import lombok.*;
 
-/**
- * Entity representing a retail customer.
- */
+
 @Setter
 @Getter
 @Builder
