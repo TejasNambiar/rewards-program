@@ -9,8 +9,11 @@ import com.retailer.rewards.repository.TransactionRepository;
 import com.retailer.rewards.service.RewardService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class RewardServiceImpl implements RewardService {
@@ -30,12 +33,21 @@ public class RewardServiceImpl implements RewardService {
             throw new NotFoundException("Customer not found with ID: " + customerId);
         }
 
-        System.out.print("Customer with ID "+customerId+" found: "+customer.toString());
+        System.out.println("Customer with ID "+customerId+" found: "+customer.getName());
 
         List<TransactionDto> transactions = transactionRepository
                 .findByCustomerIdAndTransactionDateBetween(customerId, startDate, endDate);
 
-        System.out.print("Transactions found: "+transactions.size());
+        System.out.println("Transactions found: "+transactions.size());
+
+        // Group transactions dynamically by Month Name to comply with non-hardcoded requirements
+        Map<String, Integer> pointsByMonth = transactions.stream()
+                .collect(Collectors.groupingBy(
+                        t -> t.getTransactionDate().getMonth().name(),
+                        Collectors.summingInt(t -> calculatePoints(t.getAmount()))
+                ));
+
+        System.out.println("Map: "+ pointsByMonth);
 
         CustomerResponse response = CustomerResponse.builder()
                 .customerName(customer.getName())
@@ -45,5 +57,9 @@ public class RewardServiceImpl implements RewardService {
         System.out.println("Customer Response: "+response.toString());
 
         return response;
+    }
+
+    private int calculatePoints(BigDecimal amount) {
+        return 1;
     }
 }
