@@ -2,6 +2,7 @@ package com.retailer.rewards.service.impl;
 
 import com.retailer.rewards.dto.CustomerDto;
 import com.retailer.rewards.dto.CustomerResponse;
+import com.retailer.rewards.dto.MonthReward;
 import com.retailer.rewards.dto.TransactionDto;
 import com.retailer.rewards.exception.NotFoundException;
 import com.retailer.rewards.repository.CustomerRepository;
@@ -49,10 +50,18 @@ public class RewardServiceImpl implements RewardService {
 
         System.out.println("Map: "+ pointsByMonth);
 
+        List<MonthReward> monthlyRewards = pointsByMonth.entrySet().stream()
+                .map(entry -> new MonthReward(entry.getKey(), entry.getValue()))
+                .toList();
+
+        int totalPoints = monthlyRewards.stream().mapToInt(MonthReward::getPoints).sum();
+        System.out.println("Total points calculated: "+totalPoints);
+
         CustomerResponse response = CustomerResponse.builder()
                 .customerName(customer.getName())
                 .customerId(customerId)
-                .totalPoints(0).build();
+                .monthlyRewards(monthlyRewards)
+                .totalPoints(totalPoints).build();
 
         System.out.println("Customer Response: "+response.toString());
 
