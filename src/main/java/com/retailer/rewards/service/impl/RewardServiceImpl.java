@@ -60,6 +60,21 @@ public class RewardServiceImpl implements RewardService {
     }
 
     private int calculatePoints(BigDecimal amount) {
-        return 1;
+        if(amount == null || amount.compareTo(BigDecimal.valueOf(50)) < 0){
+            return 0;
+        }
+        int value = amount.intValue();
+        System.out.println("Calculating points for amount: "+amount+" with integer value: "+value);
+        int points = 0;
+        if(value >=50 && value <=100){
+            System.out.println("Amount between 50 and 100, awarding 50 points.");
+            points += 50;
+        }else if(value > 100){
+            System.out.println("Amount above 100, awarding 50 points for first 100 and 2 points for each dollar above 100.");
+            int extra = value - 100;
+            points = extra * 2 + 50;
+        }
+        System.out.println("Points calculated: "+points);
+        return points;
     }
 }
