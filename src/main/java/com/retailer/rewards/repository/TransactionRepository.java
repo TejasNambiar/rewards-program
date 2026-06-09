@@ -12,7 +12,14 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-
+    /**
+     * Finds all transactions for a specific customer within a given date range.
+     *
+     * @param customerId the ID of the customer
+     * @param startDate  the start of the period
+     * @param endDate    the end of the period
+     * @return a list of matching transactions
+     */
     @Query("Select new com.retailer.rewards.dto.TransactionDto(t.id, new com.retailer.rewards.dto.CustomerDto(t.customer.id, t.customer.name)" +
             ", t.amount, t.transactionDate) " +
             "FROM Transaction t " +
