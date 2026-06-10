@@ -15,6 +15,6 @@ public class TransactionDto {
 
     private Long id;
     private CustomerDto customer;
-    private BigDecimal amount;
+    private Double amount;
     private LocalDate transactionDate;
 }

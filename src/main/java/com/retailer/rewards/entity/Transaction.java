@@ -26,8 +26,8 @@ public class Transaction {
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false)
+    private Double amount;
 
     @Column(nullable = false)
     private LocalDate transactionDate;

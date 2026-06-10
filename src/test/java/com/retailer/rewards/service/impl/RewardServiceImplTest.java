@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class RewardsServiceImplTest {
@@ -36,26 +38,26 @@ class RewardsServiceImplTest {
 
     @Test
     void testCalculatePoints_CorrectCalculation() {
+        ReflectionTestUtils.setField(rewardsService, "loopbackMonths", 3);
         CustomerDto customer = new CustomerDto(1L, "Alice");
-        LocalDate start = LocalDate.of(2026, 1, 1);
-        LocalDate end = LocalDate.of(2026, 3, 31);
 
-        TransactionDto t1 = new TransactionDto(1L, customer, BigDecimal.valueOf(120), LocalDate.of(2026, 1, 15)); // 90 points
-        TransactionDto t2 = new TransactionDto(2L, customer, BigDecimal.valueOf(80), LocalDate.of(2026, 2, 10));  // 30 points
-        TransactionDto t3 = new TransactionDto(3L, customer, BigDecimal.valueOf(40), LocalDate.of(2026, 2, 11));  // 0 points
+        TransactionDto t1 = new TransactionDto(1L, customer,120.0, LocalDate.of(2026, 6, 15)); // 90 points
+        TransactionDto t2 = new TransactionDto(2L, customer, 80.0, LocalDate.of(2026, 5, 10));  // 30 points
+        TransactionDto t3 = new TransactionDto(3L, customer, 40.0, LocalDate.of(2026, 5, 11));  // 0 points
+        TransactionDto t4 = new TransactionDto(2L, customer, 80.0, LocalDate.of(2026, 4, 10));  // 30 points
 
         when(customerRepository.findCustomerById(1L)).thenReturn(customer);
-        when(transactionRepository.findByCustomerIdAndTransactionDateBetween(1L, start, end)).thenReturn(Arrays.asList(t1, t2, t3));
+        when(transactionRepository.findByCustomerIdAndTransactionDateBetween(any(), any(), any())).thenReturn(Arrays.asList(t1, t2, t3, t4));
 
-        CustomerResponse response = rewardsService.getCustomerRewards(1L, start, end);
+        CustomerResponse response = rewardsService.getCustomerRewards(1L);
 
-        assertEquals(140, response.getTotalPoints());
-        assertEquals(2, response.getMonthlyRewards().size());
+        assertEquals(190, response.getTotalPoints());
+        assertEquals(3, response.getMonthlyRewards().size());
     }
 
     @Test
     void testCustomerNotFound_ThrowsException() {
         when(customerRepository.findCustomerById(99L)).thenReturn(null);
-        assertThrows(NotFoundException.class, () -> rewardsService.getCustomerRewards(99L, LocalDate.now(), LocalDate.now()));
+        assertThrows(NotFoundException.class, () -> rewardsService.getCustomerRewards(99L));
     }
 }

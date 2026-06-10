@@ -16,6 +16,10 @@ public final class LoggerUtil {
         LoggerFactory.getLogger(clazz).info(message, args);
     }
 
+    public static void info(Class<?> clazz, String message) {
+        LoggerFactory.getLogger(clazz).info(message);
+    }
+
     public static void error(Class<?> clazz, String message, Object... args) {
         LoggerFactory.getLogger(clazz).error(message, args);
     }

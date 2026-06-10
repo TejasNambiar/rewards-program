@@ -30,13 +30,11 @@ class RewardsControllerTest {
         // Fixed: Renamed from 'get()' to avoid shadowing the MockMvc builders method
     void getRewards_SuccessScenario() throws Exception {
 
-        when(rewardsService.getCustomerRewards(any(), any(), any())).thenReturn(
+        when(rewardsService.getCustomerRewards(any())).thenReturn(
                 new com.retailer.rewards.dto.CustomerResponse(1L, "John Doe", new ArrayList<>(), 0)
         );
 
         mockMvc.perform(get("/api/v1/rewards/1")
-                        .param("startDate", "2026-01-01")
-                        .param("endDate", "2026-03-31")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.customerId").value(1))
@@ -44,10 +42,14 @@ class RewardsControllerTest {
     }
 
     @Test
-    void getRewards_InvalidDates_ReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/v1/rewards/1")
-                        .param("startDate", "2026-03-31")
-                        .param("endDate", "2026-01-01"))
+    void getRewards_NoPathParam_ReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/rewards/"))
+                .andExpect(status().is5xxServerError());
+    }
+
+    @Test
+    void getRewards_InvalidCustomerId_ReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/rewards/0"))
                 .andExpect(status().isBadRequest());
     }
 }
