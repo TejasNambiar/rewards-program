@@ -29,27 +29,21 @@ public class RewardsController {
      * Endpoint: GET /api/v1/rewards/{customerId}?startDate=yyyy-MM-dd&endDate=yyyy-MM-dd
      *
      * @param customerId the unique ID of the customer
-     * @param startDate  the start of the three-month (or custom) period in ISO format (yyyy-MM-dd)
-     * @param endDate    the end of the period in ISO format (yyyy-MM-dd)
      * @return a {@link ResponseEntity} containing the {@link CustomerResponse} with point details
      * @throws IllegalArgumentException if the end date is chronologically before the start date
      * @throws java.time.format.DateTimeParseException if the date strings are not in the correct format
      */
     @GetMapping("/{customerId}")
     public ResponseEntity<CustomerResponse> getRewards(
-            @PathVariable Long customerId,
-            @RequestParam String startDate,
-            @RequestParam String endDate
+            @PathVariable Long customerId
     ) {
-        LocalDate start = LocalDate.parse(startDate);
-        LocalDate end = LocalDate.parse(endDate);
 
-        // Validation for logical date sequence
-        if (end.isBefore(start)) {
-            throw new IllegalArgumentException("End date cannot occur prior to start date.");
+        // Validation for customer id
+        if (customerId <=  0L) {
+            throw new IllegalArgumentException("Invalid Customer ID");
         }
 
-        CustomerResponse response = rewardsService.getCustomerRewards(customerId, start, end);
+        CustomerResponse response = rewardsService.getCustomerRewards(customerId);
         return ResponseEntity.ok(response);
     }
 }

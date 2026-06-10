@@ -2,16 +2,12 @@ package com.retailer.rewards.service;
 
 import com.retailer.rewards.dto.CustomerResponse;
 
-import java.time.LocalDate;
-
 public interface RewardService {
     /**
-     * Calculates monthly and total reward points for a customer over a specified date range.
+     * Retrieves reward points for a customer based on the configured configuration window.
      *
-     * @param customerId the ID of the customer
-     * @param startDate  the start date of the evaluation window
-     * @param endDate    the end date of the evaluation window
-     * @return complete rewards breakdown DTO
+     * @param customerId the unique identifier of the target customer
+     * @return a CustomerResponse detailing monthly points metrics
      */
-    CustomerResponse getCustomerRewards(Long customerId, LocalDate startDate, LocalDate endDate);
+    CustomerResponse getCustomerRewards(Long customerId);
 }

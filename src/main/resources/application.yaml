@@ -5,11 +5,24 @@ spring:
     url: jdbc:postgresql://localhost:5432/rewards_db
     username: postgres
     password: 2810
+
+  # Flyway configuration matching your exact directory requests
+  flyway:
+    enabled: true
+    locations:
+      - classpath:data-migration/structure
+      - classpath:data-migration/data
+    baseline-on-migrate: true
+
   jpa:
     hibernate:
-        ddl-auto: update
+        ddl-auto: validate
         show-sql: true
         properties:
           hibernate:
             dialect: org.hibernate.dialect.PostgreSQLDialect
             format_sql: true
+
+retailer:
+  rewards:
+    look-back-months: 3

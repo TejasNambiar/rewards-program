@@ -9,9 +9,9 @@ import com.retailer.rewards.repository.CustomerRepository;
 import com.retailer.rewards.repository.TransactionRepository;
 import com.retailer.rewards.service.RewardService;
 import com.retailer.rewards.util.LoggerUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -30,23 +30,24 @@ public class RewardServiceImpl implements RewardService {
     private final CustomerRepository customerRepository;
     private final TransactionRepository transactionRepository;
 
+    @Value("${retailer.rewards.look-back-months:3}")
+    private int loopbackMonths;
+
     public RewardServiceImpl(CustomerRepository customerRepository, TransactionRepository transactionRepository) {
         this.customerRepository = customerRepository;
         this.transactionRepository = transactionRepository;
     }
 
     /**
-     * Retrieves transactions for a specified customer within a date window, computes
+     * Retrieves transactions for a specified customer within look back period, computes
      * the reward points earned per calendar month, and returns a summarized breakdown.
      *
      * @param customerId the unique identifier of the target customer
-     * @param startDate  the start date of the reporting window (inclusive)
-     * @param endDate    the end date of the reporting window (inclusive)
      * @return a {@link CustomerResponse} detailing monthly points metrics and cumulative point total
      * @throws NotFoundException if no customer matches the provided customerId
      */
     @Override
-    public CustomerResponse getCustomerRewards(Long customerId, LocalDate startDate, LocalDate endDate) {
+    public CustomerResponse getCustomerRewards(Long customerId) {
         // 1. Verify customer existence
         CustomerDto customer = customerRepository.findCustomerById(customerId);
         if(customer == null){
@@ -55,13 +56,19 @@ public class RewardServiceImpl implements RewardService {
 
         LoggerUtil.info(RewardServiceImpl.class, "Customer with ID {} found: {}", customerId, customer.getName());
 
-        // 2. Query transactions matching criteria across the specified historical window
+        // 2. Calculate dynamic dates based on configuration rolling window back from today
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(loopbackMonths);
+
+        LoggerUtil.info(RewardServiceImpl.class, "Fetching rewards for customer within a " + loopbackMonths + " month rolling range [" + startDate + " to " + endDate + "]");
+
+        // 3. Query transactions matching criteria across the specified historical window
         List<TransactionDto> transactions = transactionRepository
                 .findByCustomerIdAndTransactionDateBetween(customerId, startDate, endDate);
 
         LoggerUtil.info(RewardServiceImpl.class, "Transactions found: {}", transactions.size());
 
-        // 3. Group transactions dynamically by Month Name to comply with non-hardcoded requirements
+        // 4. Group transactions dynamically by Month Name to comply with non-hardcoded requirements
         Map<String, Integer> pointsByMonth = transactions.stream()
                 .collect(Collectors.groupingBy(
                         t -> t.getTransactionDate().getMonth().name(),
@@ -70,12 +77,12 @@ public class RewardServiceImpl implements RewardService {
 
         LoggerUtil.info(RewardServiceImpl.class, "Map: {}", pointsByMonth);
 
-        // 4. Transform internal groupings map into API-compliant DTO structures
+        // 5. Transform internal groupings map into API-compliant DTO structures
         List<MonthReward> monthlyRewards = pointsByMonth.entrySet().stream()
                 .map(entry -> new MonthReward(entry.getKey(), entry.getValue()))
                 .toList();
 
-        // 5. Aggregate overall point totals across all processed billing windows
+        // 6. Aggregate overall point totals across all processed billing windows
         int totalPoints = monthlyRewards.stream().mapToInt(MonthReward::getPoints).sum();
         LoggerUtil.info(RewardServiceImpl.class, "Total points calculated: {}", totalPoints);
 
@@ -100,8 +107,8 @@ public class RewardServiceImpl implements RewardService {
      * @param amount the raw monetary value of a discrete transaction purchase
      * @return calculated integer reward points allocation value (defaults to 0 if under limits)
      */
-    private int calculatePoints(BigDecimal amount) {
-        if(amount == null || amount.compareTo(BigDecimal.valueOf(50)) < 0){
+    private int calculatePoints(Double amount) {
+        if(amount == null || amount.compareTo(50.0) < 0){
             return 0;
         }
         int value = amount.intValue();
